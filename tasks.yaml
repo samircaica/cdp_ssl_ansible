@@ -7,24 +7,6 @@
     JAVA_HOME: '{{ ssl_vars.JAVA_HOME }}'
 
   tasks:
-    - name: Check Java version"
-      command: /bin/bash -c "echo $JAVA_HOME"
-      register: host_java_home
-
-    - debug:
-        var: host_java_home.stdout
-
-    - name: Check if PKI dir already exists
-      stat:
-        path: /opt/cloudera/security/pki
-      register: pki_exists
-
-    - name: Create PKI dir
-      file:
-        path: '/opt/cloudera/security/pki'
-        state: directory
-      when: pki_exists.stat.exists == false
-
     - name: Get FQDN
       command: /bin/bash -c "hostname -f"
       register: host_fqdn
