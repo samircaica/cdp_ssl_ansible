@@ -1,0 +1,21 @@
+---
+- hosts: cm
+  remote_user: root
+  vars_files:
+    - external_vars.yml
+  environment:
+    JAVA_HOME: {{ JAVA_HOME }}
+
+  tasks:
+    - name: Check Java version"
+
+    - name: Check if PKI dir already exists
+      stat:
+        path: /opt/cloudera/security/pki
+      register: pki_exists
+
+    - name: Create PKI dir
+      file:
+        path: '/opt/cloudera/security/pki'
+        state: directory
+      when: pki_exists.stat.exists == false

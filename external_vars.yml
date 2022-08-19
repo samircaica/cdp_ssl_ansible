@@ -1,0 +1,29 @@
+---
+adm_var:
+  principal: 'admin/admin'
+  password: 'hadoop'
+
+REALM: 'COELAB.CLOUDERA.COM'
+KDC_HOST: 'c134-node1.coelab.cloudera.com'
+KRB_ENC_TYPES: 'aes256-cts aes128-cts des3-hmac-sha1 des-hmac-sha1 des-cbc-crc'
+
+cm_vars:
+  cm_protocol: 'http'
+  #SSL
+  #cm_protocol: 'https'
+  cm_host: 'c134-node1.coelab.cloudera.com'
+  cm_port: '7180'
+  #SSL
+  #cm_port: '7183'
+  cm_user: 'admin'
+  cm_password: 'scaica'
+  cm_api_version: 'v45'
+  datanodeTransceiverPort: '1022'
+  datanodeWebPort: '1023'
+  #SSL
+  #datanodeTransceiverPort: '9866'
+  #datanodeWebPort: '9865'
+
+ssl_vars:
+  JAVA_HOME: '/usr/java/jdk1.8.0_232-cloudera'
+
