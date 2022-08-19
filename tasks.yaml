@@ -105,7 +105,7 @@
         url_username: "{{ cm_vars.cm_user }}"
         url_password: "{{ cm_vars.cm_password }}"
       register: results
-      until: results.status == 200 and json['items'][0].entityStatus == "GOOD_HEALTH"
+      until: results.status == 200 and results.json['items'][0].entityStatus == "GOOD_HEALTH
       retries: 10
       delay: 30
 
