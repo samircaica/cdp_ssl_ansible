@@ -25,6 +25,8 @@ cm_vars:
   #datanodeWebPort: '9865'
 
 ssl_vars:
+  cm_protocol: 'https'
+  cm_port: '7183'
   JAVA_HOME: '/usr/java/jdk1.8.0_232-cloudera'
   OU: 'OU=Engineering,O=Cloudera,L=Palo Alto,ST=California,C=COM'
   sshPort: 22

@@ -99,7 +99,7 @@
 
     - name: Check CM Server is Started in GOOD_HEALTH
       uri:
-        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters"
+        url: "{{ ssl_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ ssl_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters"
         method: GET
         validate_certs: no
         url_username: "{{ cm_vars.cm_user }}"
@@ -114,7 +114,7 @@
 
     - name: CM Redeploy Client config
       uri:
-        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters/{{ cluster_name }}/commands/deployClientConfig?clustername={{ cluster_name }}"
+        url: "{{ ssl_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ ssl_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters/{{ cluster_name }}/commands/deployClientConfig?clustername={{ cluster_name }}"
         method: POST
         return_content: yes
         validate_certs: no
@@ -128,7 +128,7 @@
 
     - name: CM services Restart
       uri:
-        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters/{{ cluster_name }}/commands/restart"
+        url: "{{ ssl_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ ssl_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters/{{ cluster_name }}/commands/restart"
         method: POST
         return_content: yes
         body_format: form-urlencoded
@@ -145,7 +145,7 @@
 
     - name: CM Mgmt services restart
       uri:
-        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/cm/service/commands/restart"
+        url: "{{ ssl_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ ssl_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/cm/service/commands/restart"
         method: POST
         return_content: yes
         validate_certs: no
