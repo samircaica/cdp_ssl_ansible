@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: cm
   remote_user: root
   vars_files:
     - external_vars.yml
@@ -31,3 +31,136 @@
 
     - debug:
         var: host_fqdn.stdout
+
+    - name: Check CM API
+      uri:
+        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters"
+        method: GET
+        validate_certs: no
+        url_username: "{{ cm_vars.cm_user }}"
+        url_password: "{{ cm_vars.cm_password }}"
+      register: results
+
+    - debug:
+        var: results
+
+    - name: Cluster Name
+      set_fact:  
+        cluster_name:  "{{ results.json | json_query(jmesquery) }}"
+      vars:
+        jmesquery: "items[0].name"
+
+    - name: Check if TLS enabled PRE
+      uri:
+        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters/{{ cluster_name }}/isTlsEnabled?clusterName={{ cluster_name }}"
+        method: GET
+        validate_certs: no
+        return_content: yes
+        url_username: "{{ cm_vars.cm_user }}"
+        url_password: "{{ cm_vars.cm_password }}"
+      register: cm_is_tls_enabled_pre
+
+    - debug:
+        var: cm_is_tls_enabled_pre.json
+
+    - name: Set TLS for CM and the Cluster
+      uri:
+        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/cm/commands/generateCmca"
+        method: POST
+        return_content: yes
+        body: "{
+                \"sshPort\": {{ ssl_vars.sshPort}}, 
+                \"userName\": \"{{ ssl_vars.userName }}\",
+                \"password\": \"{{ ssl_vars.password }}\",
+                \"privateKey\": \"{{ ssl_vars.privateKey }}\",
+                \"passphrase\": \"{{ ssl_vars.passphrase }}\",
+                \"location\": \"{{ ssl_vars.location }}\",
+                \"customCA\": {{ ssl_vars.customCA }},
+                \"interpretAsFilenames\": {{ ssl_vars.interpretAsFilenames }},
+                \"cmHostCert\": \"{{ ssl_vars.cmHostCert }}\",
+                \"cmHostKey\": \"{{ ssl_vars.cmHostKey }}\",
+                \"caCert\": \"{{ ssl_vars.caCert }}\",
+                \"keystorePasswd\": \"{{ ssl_vars.keystorePasswd }}\",
+                \"truststorePasswd\": \"{{ ssl_vars.truststorePasswd }}\",
+                \"trustedCaCerts\": \"{{ ssl_vars.trustedCaCerts }}\",
+                \"additionalArguments\": {{ ssl_vars.additionalArguments }},
+                \"hostCerts\": {{ ssl_vars.hostCerts }},
+                \"configureAllServices\": {{ ssl_vars.configureAllServices }}
+              }"
+        body_format: json
+        validate_certs: no
+        url_username: "{{ cm_vars.cm_user }}"
+        url_password: "{{ cm_vars.cm_password }}"
+      register: cluster_config_tls
+      when: cm_is_tls_enabled_pre.json == false
+
+    - debug:
+        var: cluster_config_tls.json.success
+
+    - name: Check TLS enabled POST
+      uri:
+        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters/{{ cluster_name }}/isTlsEnabled?clusterName={{ cluster_name }}"
+        method: GET
+        validate_certs: no
+        return_content: yes
+        url_username: "{{ cm_vars.cm_user }}"
+        url_password: "{{ cm_vars.cm_password }}"
+      register: cm_is_tls_enabled_post
+      when: cm_is_tls_enabled_pre.json == false and cluster_config_tls.json.success == true
+
+    - debug:
+        var: cm_is_tls_enabled_post
+
+    - name: Cloudera Manager Server restart
+      command: /bin/bash -c "service cloudera-scm-server restart"
+      when: cm_is_tls_enabled_pre.json == false and cluster_config_tls.json.success == true and cm_is_tls_enabled_post.json == true
+
+    - name: Pause for 60 secons
+      pause:
+        seconds: 60
+
+    - name: CM Redeploy Client config
+      uri:
+        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters/{{ cluster_name }}/commands/deployClientConfig?clustername={{ cluster_name }}"
+        method: POST
+        return_content: yes
+        validate_certs: no
+        url_username: "{{ cm_vars.cm_user }}"
+        url_password: "{{ cm_vars.cm_password }}"
+      register: cm_config_redeployClientConfig
+      when: cm_is_tls_enabled_pre.json == false and cluster_config_tls.json.success == true and cm_is_tls_enabled_post.json == true
+
+    - debug:
+        var: cm_config_redeployClientConfig
+
+    - name: CM services Restart
+      uri:
+        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/clusters/{{ cluster_name }}/commands/restart"
+        method: POST
+        return_content: yes
+        body_format: form-urlencoded
+        body:
+          clustername: '{{ cluster_name }}'
+        validate_certs: no
+        url_username: "{{ cm_vars.cm_user }}"
+        url_password: "{{ cm_vars.cm_password }}"
+      register: cm_config_servicesRestart
+      when: cm_is_tls_enabled_pre.json == false and cluster_config_tls.json.success == true and cm_is_tls_enabled_post.json == true
+
+    - debug:
+        var: cm_config_servicesRestart
+
+    - name: CM Mgmt services restart
+      uri:
+        url: "{{ cm_vars.cm_protocol }}://{{ cm_vars.cm_host }}:{{ cm_vars.cm_port }}/api/{{ cm_vars.cm_api_version }}/cm/service/commands/restart"
+        method: POST
+        return_content: yes
+        validate_certs: no
+        url_username: "{{ cm_vars.cm_user }}"
+        url_password: "{{ cm_vars.cm_password }}"
+      register: cm_config_mgmtServiceRestart
+      when: cm_is_tls_enabled_pre.json == false and cluster_config_tls.json.success == true and cm_is_tls_enabled_post.json == true
+
+    - debug:
+        var: cm_config_mgmtServiceRestart
+    

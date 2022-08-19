@@ -26,4 +26,22 @@ cm_vars:
 
 ssl_vars:
   JAVA_HOME: '/usr/java/jdk1.8.0_232-cloudera'
+  OU: 'OU=Engineering,O=Cloudera,L=Palo Alto,ST=California,C=COM'
+  sshPort: 22
+  userName: 'root'
+  password: 'scaica'
+  privateKey: ''
+  passphrase: ''
+  location: ''
+  customCA: false
+  interpretAsFilenames: true
+  cmHostCert: ''
+  cmHostKey: ''
+  caCert: ''
+  keystorePasswd: ''
+  truststorePasswd: ''
+  trustedCaCerts: ''
+  additionalArguments: []
+  hostCerts: []
+  configureAllServices: true
 
